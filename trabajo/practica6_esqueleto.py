@@ -96,6 +96,9 @@ class LayoutGraph:
             self.accumulator[i] += force
             self.accumulator[j] -= force
 
+            self._log("[A] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
+                      .format(a, b, force[0], force[1], np.linalg.norm(force)))
+
     def _force_attraction(self, x):
         return x * x / self.k1
 
@@ -113,6 +116,9 @@ class LayoutGraph:
                 self.accumulator[i] += force
                 self.accumulator[j] -= force
 
+                self._log("[R] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
+                          .format(V[i], V[j], force[0], force[1], np.linalg.norm(force)))
+
     def _force_repulsion(self, x):
         return -self.k2 * self.k2 / x
 
@@ -127,6 +133,8 @@ class LayoutGraph:
             delta_attraction = self._force_gravity(distance)
             force = delta_attraction * (vector / distance)
             self.accumulator[i] += force
+
+            self._log("[G] Sobre {} se aplica ({:.2f},{:.2f})".format(V[i], force[0], force[1]))
 
     def _force_gravity(self, x):
         return 0.1 * self._force_attraction(x)
