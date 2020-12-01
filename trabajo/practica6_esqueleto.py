@@ -73,11 +73,10 @@ class LayoutGraph:
         self._compute_gravity()
         self._separate_overlapping_vertex()
         self._update_positions()
-        self._clamp_in_space() #FIXME remove
 
     def _display_step(self):
         plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1])
-        plt.plot(self.posiciones[:, 0], self.posiciones[:, 1])
+        plt.plot(self.posiciones[:, 0], self.posiciones[:, 1]) #FIXME mejorar
         plt.show()
 
     def _initialize_accumulators(self):
@@ -86,19 +85,16 @@ class LayoutGraph:
 
     def _compute_attractions(self):
         V, E = self.grafo
-        for i in range(len(V)):
-            for a, b in E:
-                if V[i] != a and V[i] != b: #FIXME mejorar
-                    continue
+        for a, b in E:
+            i = V.index(a)
+            j = V.index(b)
 
-                j = V.index(b) if V[i] == a else V.index(a)
-
-                vector = self.posiciones[i] - self.posiciones[j]
-                distance = np.linalg.norm(vector)
-                delta_attraction = self._force_attraction(distance)
-                force = delta_attraction * (vector / distance)
-                self.accumulator[i] += force
-                self.accumulator[j] -= force
+            vector = self.posiciones[i] - self.posiciones[j]
+            distance = np.linalg.norm(vector)
+            delta_attraction = self._force_attraction(distance)
+            force = delta_attraction * (vector / distance)
+            self.accumulator[i] += force
+            self.accumulator[j] -= force
 
     def _force_attraction(self, x):
         return x * x / self.k1
@@ -114,11 +110,11 @@ class LayoutGraph:
                 distance = np.linalg.norm(vector)
                 delta_attraction = self._force_repulsion(distance)
                 force = delta_attraction * (vector / distance)
-                self.accumulator[i] -= force
-                self.accumulator[j] += force
+                self.accumulator[i] += force
+                self.accumulator[j] -= force
 
     def _force_repulsion(self, x):
-        return self.k2 * self.k2 / x
+        return -self.k2 * self.k2 / x
 
     def _compute_gravity(self):
         eps = np.finfo(float).eps
@@ -139,9 +135,6 @@ class LayoutGraph:
         eps = 0.005
         V, E = self.grafo
         self.posiciones += np.random.default_rng().uniform(np.finfo(float).eps, eps, (len(V), 2))#es un asco, correjir
-
-    def _clamp_in_space(self):
-        self.posiciones.clip(np.finfo(float).eps, self.size)
 
     def _update_positions(self):
         V, E = self.grafo
