@@ -19,8 +19,8 @@ class LayoutGraph:
         grafo: grafo en formato lista
         iters: cantidad de iteraciones a realizar
         refresh: cada cuántas iteraciones graficar. Si su valor es cero, entonces debe graficarse solo al final.
-        c1: constante de repulsión
-        c2: constante de atracción
+        c1: constante de attracion
+        c2: constante de repulsion
         verbose: si está encendido, activa los comentarios
         """
 
@@ -71,6 +71,7 @@ class LayoutGraph:
         self._initialize_accumulators()
         self._compute_attractions()
         self._compute_repulsions()
+        self._compute_gravity()
         self._separate_overlapping_vertex()
         self._update_positions()
 
@@ -114,13 +115,28 @@ class LayoutGraph:
                 self.accumulator[i] += force
                 self.accumulator[j] -= force
 
+    def _force_repulsion(self, x):
+        return self.k2 * self.k2 / x
+
+    def _compute_gravity(self):
+        eps = np.finfo(float).eps
+        gravity_origin = np.asarray([self.size / 2, self.size / 2])
+
+        V, E = self.grafo
+        for i in range(len(V)):
+            vector = gravity_origin - self.posiciones[i]
+            distance = np.linalg.norm(vector) + eps
+            delta_attraction = self._force_gravity(distance)
+            force = delta_attraction * vector / distance
+            self.accumulator[i] += force
+
+    def _force_gravity(self, x):
+        return 0.1 * self._force_attraction(x)
+
     def _separate_overlapping_vertex(self):
         eps = 0.005
         V, E = self.grafo
         self.posiciones += np.random.default_rng().uniform(np.finfo(float).eps, eps, (len(V), 2))#es un asco, correjir
-
-    def _force_repulsion(self, x):
-        return self.k2 * self.k2 / x
 
     def _update_positions(self):
         V, E = self.grafo
@@ -170,8 +186,8 @@ def main():
         grafo1,  # TODO: Cambiar para usar grafo leido de archivo
         iters=args.iters,
         refresh=1,
-        c1=0.1,
-        c2=5.0,
+        c1=5.0,
+        c2=0.1,
         verbose=args.verbose
     )
 
