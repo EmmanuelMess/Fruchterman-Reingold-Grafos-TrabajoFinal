@@ -135,13 +135,12 @@ class LayoutGraph:
         return -self.k2 * self.k2 / x
 
     def _compute_gravity(self):
-        eps = np.finfo(float).eps
         gravity_origin = np.asarray([self.size / 2, self.size / 2])
 
         V, E = self.grafo
         for i in range(len(V)):
             vector = gravity_origin - self.posiciones[i]
-            distance = np.linalg.norm(vector) + eps
+            distance = np.linalg.norm(vector)
             delta_attraction = self._force_gravity(distance)
             force = delta_attraction * (vector / distance)
             self.accumulator[i] += force
@@ -255,7 +254,7 @@ def main():
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
-        1000,
+        100,
         grafo,
         iters=args.iters,
         refresh=1,
