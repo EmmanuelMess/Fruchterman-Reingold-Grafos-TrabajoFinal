@@ -7,13 +7,15 @@
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import random
 
 
 class LayoutGraph:
 
-    def __init__(self, grafo, iters, refresh, c1, c2, verbose=False):
+    def __init__(self, tamano: float, grafo, iters, refresh, c1, c2, verbose=False):
         """
         Parámetros:
+        tamano: tamaño de uno de los lados del cuadrado que limita la representacion
         grafo: grafo en formato lista
         iters: cantidad de iteraciones a realizar
         refresh: cada cuántas iteraciones graficar. Si su valor es cero, entonces debe graficarse solo al final.
@@ -33,7 +35,7 @@ class LayoutGraph:
         # Guardo opciones
         self.iters = iters
         self.verbose = verbose
-        # TODO: faltan opciones
+        self.size = tamano
         self.refresh = refresh
         self.c1 = c1
         self.c2 = c2
@@ -43,7 +45,87 @@ class LayoutGraph:
         Aplica el algoritmo de Fruchtermann-Reingold para obtener (y mostrar)
         un layout
         """
-        pass
+        V, E = self.grafo
+
+        self.k1 = self.c1 * np.sqrt(self.size * self.size / len(V))
+        self.k2 = self.c2 * np.sqrt(self.size * self.size / len(V))
+
+        self._randomize_positions()
+        self._separate_overlapping_vertex()
+        self._display_step()
+
+        for k in range(self.iters):
+            self._step()
+
+            self._display_step()
+
+    def _randomize_positions(self):
+        V, E = self.grafo
+        size = self.size #float tamaño del espacio
+
+        # "np.finfo(float).eps" para que no genere vertices sobre el borde,
+        # porque el final del rango es abierto pero el inicio es cerrado
+        self.posiciones = np.random.default_rng().uniform(np.finfo(float).eps, size, (len(V), 2))
+
+    def _step(self):
+        self._initialize_accumulators()
+        self._compute_attractions()
+        self._compute_repulsions()
+        self._separate_overlapping_vertex()
+        self._update_positions()
+
+    def _display_step(self):
+        plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1])
+        plt.plot(self.posiciones[:, 0], self.posiciones[:, 1])
+        plt.show()
+
+    def _initialize_accumulators(self):
+        V, E = self.grafo
+        self.accumulator = np.zeros((len(V), 2))
+
+    def _compute_attractions(self):
+        V, E = self.grafo
+        for i in range(len(V)):
+            for j in range(len(V)):
+                if i == j:
+                    continue
+
+                vector = self.posiciones[i] - self.posiciones[j]
+                distance = np.linalg.norm(vector)
+                delta_attraction = self._force_attraction(distance)
+                force = delta_attraction * vector / distance
+                self.accumulator[i] += force
+                self.accumulator[j] -= force
+
+    def _force_attraction(self, x):
+        return x * x / self.k1
+
+    def _compute_repulsions(self):
+        V, E = self.grafo
+        for i in range(len(V)):
+            for j in range(len(V)):
+                if i == j:
+                    continue
+
+                vector = self.posiciones[i] - self.posiciones[j]
+                distance = np.linalg.norm(vector)
+                delta_attraction = self._force_repulsion(distance)
+                force = delta_attraction * vector / distance
+                self.accumulator[i] += force
+                self.accumulator[j] -= force
+
+    def _separate_overlapping_vertex(self):
+        eps = 0.005
+        V, E = self.grafo
+        self.posiciones += np.random.default_rng().uniform(np.finfo(float).eps, eps, (len(V), 2))#es un asco, correjir
+
+    def _force_repulsion(self, x):
+        return self.k2 * self.k2 / x
+
+    def _update_positions(self):
+        V, E = self.grafo
+        for i in range(len(V)):
+            self.posiciones[i] += self.accumulator[i]
 
 
 def main():
@@ -78,19 +160,13 @@ def main():
 
     args = parser.parse_args()
 
-    # Descomentar abajo para ver funcionamiento de argparse
-    # print args.verbose
-    # print args.iters    
-    # print args.file_name
-    # print args.temp
-    # return
-
     # TODO: Borrar antes de la entrega
     grafo1 = ([1, 2, 3, 4, 5, 6, 7],
               [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 1)])
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
+        10,
         grafo1,  # TODO: Cambiar para usar grafo leido de archivo
         iters=args.iters,
         refresh=1,
