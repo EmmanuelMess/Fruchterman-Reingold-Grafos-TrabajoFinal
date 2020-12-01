@@ -14,7 +14,8 @@ from numpy import random
 
 class LayoutGraph:
 
-    def __init__(self, tamano: float, grafo, iters, refresh, c1, c2, initial_t, update_temp, verbose=False):
+    def __init__(self, tamano: float, grafo, iters, refresh, c1, c2, initial_t, update_temp, verbose=False,
+                 limit_repulsion=False):
         """
         Parámetros:
         tamano: tamaño de uno de los lados del cuadrado que limita la representacion
@@ -26,6 +27,7 @@ class LayoutGraph:
         initial_t: constante inicial de temperatura
         update_temp: constante de actualizacion de la temperatura
         verbose: si está encendido, activa los comentarios
+        limit_repulsion: limita la distancia de repulsion, hace que ande mas rapido
         """
 
         # Guardo el grafo
@@ -40,6 +42,7 @@ class LayoutGraph:
         self.c2 = c2
         self.initial_t = initial_t
         self.update_temp = update_temp
+        self.limit_repulsion = limit_repulsion
 
     def layout(self):
         """
@@ -65,7 +68,7 @@ class LayoutGraph:
             if self.refresh != 0 and k % self.refresh == 0:
                 self._display_step()
 
-        self._display_step()
+        #self._display_step()
 
     def _randomize_positions(self):
         V, E = self.grafo
@@ -128,6 +131,10 @@ class LayoutGraph:
 
                 vector = self.posiciones[i] - self.posiciones[j]
                 distance = np.linalg.norm(vector)
+
+                if self.limit_repulsion and distance > 2 * self.k2:
+                    continue
+
                 delta_repulsion = self._force_repulsion(distance)
                 force = delta_repulsion * (vector / distance)
                 self.accumulator[i] -= force
@@ -140,7 +147,7 @@ class LayoutGraph:
         return -self.k2 * self.k2 / x
 
     def _compute_gravity(self):
-        gravity_origin = np.asarray([self.size / 2, self.size / 2])
+        gravity_origin = np.ones(2) * self.size / 2
 
         V, E = self.grafo
         for i in range(len(V)):
@@ -156,7 +163,7 @@ class LayoutGraph:
         return 0.1 * self._force_attraction(x)
 
     def _separate_overlapping_vertex(self):
-        if not np.any(np.isnan(self.accumulator)):
+        if not np.isnan(self.accumulator).any():
             return
 
         # Esto solo se ejecuta si alguna division dio nan,
@@ -164,7 +171,7 @@ class LayoutGraph:
         eps = 0.005
 
         for i in range(self.accumulator.shape[0]):
-            if np.any(np.isnan(self.accumulator[i])):
+            if np.isnan(self.accumulator[i]).any():
                 small_force = np.random.normal(0, 1, 2)
                 small_force = np.linalg.norm(small_force)
                 small_force *= eps
@@ -254,6 +261,13 @@ def main():
         'file_name',
         help='Archivo del cual leer el grafo a dibujar'
     )
+    # Computar con limite de distancia de repulsion
+    parser.add_argument(
+        '--limitrepulsion',
+        action='store_true',
+        help='Computar con limite de distancia de repulsion',
+        default=False
+    )
 
     args = parser.parse_args()
 
@@ -269,13 +283,16 @@ def main():
         c2=0.1,
         initial_t=args.temp,
         update_temp=0.95,
-        verbose=args.verbose
+        verbose=args.verbose,
+        limit_repulsion=args.limitrepulsion
     )
 
     # Ejecutamos el layout
     layout_gr.layout()
     return
 
+import cProfile
+import re
 
 if __name__ == '__main__':
-    main()
+    cProfile.run("main()")
