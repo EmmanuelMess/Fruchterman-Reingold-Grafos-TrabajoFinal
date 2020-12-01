@@ -143,6 +143,37 @@ class LayoutGraph:
         for i in range(len(V)):
             self.posiciones[i] += self.accumulator[i]
 
+def lee_grafo_archivo(file_path):
+    '''
+    Lee un grafo desde un archivo y devuelve su representacion como lista.
+    Ejemplo Entrada:
+        3
+        A
+        B
+        C
+        A B
+        B C
+        C B
+    Ejemplo retorno:
+        (['A','B','C'],[('A','B'),('B','C'),('C','B')])
+    '''
+    with open(file_path, 'r') as iterable:
+        cant = int(iterable.readline())
+        vertices = []
+        while len(vertices) != cant:
+            vertices.append(iterable.readline().strip())
+
+        aristas = []
+        while True:
+            v = iterable.readline().strip().split(" ")
+            if v[0] == "":
+                break
+            if (v[0], v[1]) in aristas:
+                continue
+            if v[0] in vertices and v[1] in vertices:
+                aristas.append((v[0], v[1]))
+        return (vertices, aristas)
+
 
 def main():
     # Definimos los argumentos de linea de comando que aceptamos
@@ -176,14 +207,12 @@ def main():
 
     args = parser.parse_args()
 
-    # TODO: Borrar antes de la entrega
-    grafo1 = ([1, 2, 3, 4, 5, 6, 7],
-              [(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 1)])
+    grafo = lee_grafo_archivo(args.file_name)
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
         10,
-        grafo1,  # TODO: Cambiar para usar grafo leido de archivo
+        grafo,
         iters=args.iters,
         refresh=1,
         c1=5.0,
