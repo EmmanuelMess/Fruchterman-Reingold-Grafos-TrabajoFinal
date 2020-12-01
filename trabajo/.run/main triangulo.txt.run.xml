@@ -9,7 +9,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/practica6_esqueleto.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/practica6.py" />
     <option name="PARAMETERS" value="grafos/Triangulo.txt -v" />
     <option name="SHOW_COMMAND_LINE" value="true" />
     <option name="EMULATE_TERMINAL" value="false" />

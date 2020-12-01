@@ -72,10 +72,11 @@ class LayoutGraph:
             self._log(lambda: "Fin iteracion {}".format(k))
             self._log(lambda: "Posiciones " + str(self.posiciones.tolist()))
 
-            if self.refresh != 0 and k % self.refresh == 0:
+            if self.refresh > 0 and k % self.refresh == 0:
                 self._display_step()
 
-        self._display_step()
+        if self.refresh >= 0:
+            self._display_step()
 
     def _randomize_positions(self):
         V, E = self.grafo
@@ -280,6 +281,13 @@ def main():
         help='Computar con limite de distancia de repulsion',
         default=False
     )
+    # Calcular cuanto toman las funciones con el perfilador de Python
+    parser.add_argument(
+        '--profile',
+        action='store_true',
+        help='Calcular cuanto toman las funciones con el perfilador de Python',
+        default=False
+    )
 
     args = parser.parse_args()
 
@@ -290,7 +298,7 @@ def main():
         1000,
         grafo,
         iters=args.iters,
-        refresh=0,
+        refresh=-1 if args.profile else 0,
         c1=5.0,
         c2=0.1,
         initial_t=args.temp,
@@ -300,8 +308,12 @@ def main():
     )
 
     # Ejecutamos el layout
-    layout_gr.layout()
-    return
+    if args.profile:
+        import cProfile
+
+        cProfile.runctx('layout_gr.layout()', {'layout_gr': layout_gr}, {})
+    else:
+        layout_gr.layout()
 
 
 if __name__ == '__main__':
