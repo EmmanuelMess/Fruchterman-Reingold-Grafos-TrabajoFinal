@@ -12,7 +12,7 @@ from numpy import random
 
 class LayoutGraph:
 
-    def __init__(self, tamano: float, grafo, iters, refresh, c1, c2, verbose=False):
+    def __init__(self, tamano: float, grafo, iters, refresh, c1, c2, initial_t, update_temp, verbose=False):
         """
         Parámetros:
         tamano: tamaño de uno de los lados del cuadrado que limita la representacion
@@ -21,6 +21,8 @@ class LayoutGraph:
         refresh: cada cuántas iteraciones graficar. Si su valor es cero, entonces debe graficarse solo al final.
         c1: constante de attracion
         c2: constante de repulsion
+        initial_t: constante inicial de temperatura
+        update_temp: constante de actualizacion de la temperatura
         verbose: si está encendido, activa los comentarios
         """
 
@@ -34,6 +36,8 @@ class LayoutGraph:
         self.refresh = refresh
         self.c1 = c1
         self.c2 = c2
+        self.initial_t = initial_t
+        self.update_temp = update_temp
 
     def layout(self):
         """
@@ -67,17 +71,22 @@ class LayoutGraph:
         self.posiciones = np.random.default_rng().uniform(np.finfo(float).eps, size, (len(V), 2))
 
     def _step(self):
+        self._initialize_temperature()
         self._initialize_accumulators()
         self._compute_attractions()
         self._compute_repulsions()
         self._compute_gravity()
         self._separate_overlapping_vertex()
         self._update_positions()
+        self._update_temperature()
 
     def _display_step(self):
         plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1])
         plt.plot(self.posiciones[:, 0], self.posiciones[:, 1]) #FIXME mejorar
         plt.show()
+
+    def _initialize_temperature(self):
+        self.temperature = self.initial_t
 
     def _initialize_accumulators(self):
         V, E = self.grafo
@@ -147,7 +156,17 @@ class LayoutGraph:
     def _update_positions(self):
         V, E = self.grafo
         for i in range(len(V)):
+            distance = np.linalg.norm(self.accumulator[i])
+
+            if distance > self.temperature:
+                self.accumulator[i] /= distance
+                self.accumulator[i] *= self.temperature
+
             self.posiciones[i] += self.accumulator[i]
+            #TODO clip a bordes
+
+    def _update_temperature(self):
+        self.temperature *= self.update_temp
 
     def _log(self, msg: str):
         if self.verbose:
@@ -228,6 +247,8 @@ def main():
         refresh=1,
         c1=5.0,
         c2=0.1,
+        initial_t=1,
+        update_temp=0.95,
         verbose=args.verbose
     )
 
