@@ -50,7 +50,7 @@ class LayoutGraph:
         self.k2 = self.c2 * np.sqrt(self.size * self.size / len(V))
 
         self._randomize_positions()
-        #self._display_step()
+        self._display_step()
 
         for k in range(self.iters):
             self._log("Inicio iteracion {}".format(k))
@@ -59,7 +59,7 @@ class LayoutGraph:
 
             self._log("Fin iteracion {}".format(k))
             self._log("Posiciones " + str(self.posiciones.tolist()))
-            #self._display_step()
+            self._display_step()
 
     def _randomize_positions(self):
         V, E = self.grafo
@@ -80,8 +80,12 @@ class LayoutGraph:
         self._update_temperature()
 
     def _display_step(self):
+        V, E = self.grafo
         plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1])
-        plt.plot(self.posiciones[:, 0], self.posiciones[:, 1]) #FIXME mejorar
+        for a, b in E:
+            x = [self.posiciones[V.index(a), 0], self.posiciones[V.index(b), 0]]
+            y = [self.posiciones[V.index(a), 1], self.posiciones[V.index(b), 1]]
+            plt.plot(x, y)
         plt.show()
 
     def _initialize_temperature(self):
@@ -251,7 +255,7 @@ def main():
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
-        10,
+        1000,
         grafo,
         iters=args.iters,
         refresh=1,
