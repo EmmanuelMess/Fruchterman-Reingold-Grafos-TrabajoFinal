@@ -5,12 +5,18 @@
 # Ejemplo parseo argumentos
 
 import argparse
-import time
-import types
+import math
 
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import random
+
+
+def fast_euclidean_distance(vector):
+    """
+    Para escalares math.sqrt es mas rapido que np.math.sqrt
+    """
+    return math.sqrt(vector[0]*vector[0] + vector[1]*vector[1])
 
 
 class LayoutGraph:
@@ -69,7 +75,7 @@ class LayoutGraph:
             if self.refresh != 0 and k % self.refresh == 0:
                 self._display_step()
 
-        #self._display_step()
+        self._display_step()
 
     def _randomize_positions(self):
         V, E = self.grafo
@@ -111,14 +117,14 @@ class LayoutGraph:
             j = V.index(b)
 
             vector = self.posiciones[i] - self.posiciones[j]
-            distance = np.linalg.norm(vector)
+            distance = fast_euclidean_distance(vector)
             delta_attraction = self._force_attraction(distance)
             force = delta_attraction * (vector / distance)
             self.accumulator[i] -= force
             self.accumulator[j] += force
 
             self._log(lambda: "[A] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
-                      .format(a, b, force[0], force[1], np.linalg.norm(force)))
+                      .format(a, b, force[0], force[1], fast_euclidean_distance(force)))
 
     def _force_attraction(self, x):
         return x * x / self.k1
@@ -131,7 +137,7 @@ class LayoutGraph:
                     continue
 
                 vector = self.posiciones[i] - self.posiciones[j]
-                distance = np.linalg.norm(vector)
+                distance = fast_euclidean_distance(vector)
 
                 if self.limit_repulsion and distance > 2 * self.k2:
                     continue
@@ -142,7 +148,7 @@ class LayoutGraph:
                 self.accumulator[j] += force
 
                 self._log(lambda: "[R] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
-                          .format(V[i], V[j], force[0], force[1], np.linalg.norm(force)))
+                          .format(V[i], V[j], force[0], force[1], fast_euclidean_distance(force)))
 
     def _force_repulsion(self, x):
         return -self.k2 * self.k2 / x
@@ -153,7 +159,7 @@ class LayoutGraph:
         V, E = self.grafo
         for i in range(len(V)):
             vector = gravity_origin - self.posiciones[i]
-            distance = np.linalg.norm(vector)
+            distance = fast_euclidean_distance(vector)
             delta_attraction = self._force_gravity(distance)
             force = delta_attraction * (vector / distance)
             self.accumulator[i] += force
@@ -174,14 +180,14 @@ class LayoutGraph:
         for i in range(self.accumulator.shape[0]):
             if np.isnan(self.accumulator[i]).any():
                 small_force = np.random.normal(0, 1, 2)
-                small_force = np.linalg.norm(small_force)
+                small_force = fast_euclidean_distance(small_force)
                 small_force *= eps
                 self.accumulator[i] = small_force
 
     def _update_positions(self):
         V, E = self.grafo
         for i in range(len(V)):
-            distance = np.linalg.norm(self.accumulator[i])
+            distance = fast_euclidean_distance(self.accumulator[i])
 
             if distance > self.temperature:
                 self.accumulator[i] /= distance
@@ -297,8 +303,6 @@ def main():
     layout_gr.layout()
     return
 
-import cProfile
-import re
 
 if __name__ == '__main__':
-    cProfile.run("main()")
+    main()
