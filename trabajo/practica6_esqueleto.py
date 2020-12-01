@@ -81,11 +81,11 @@ class LayoutGraph:
 
     def _display_step(self):
         V, E = self.grafo
-        plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1])
+        plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1], color='00')
         for a, b in E:
             x = [self.posiciones[V.index(a), 0], self.posiciones[V.index(b), 0]]
             y = [self.posiciones[V.index(a), 1], self.posiciones[V.index(b), 1]]
-            plt.plot(x, y)
+            plt.plot(x, y, color='00')
         plt.show()
 
     def _initialize_temperature(self):
