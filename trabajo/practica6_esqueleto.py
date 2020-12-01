@@ -5,6 +5,8 @@
 # Ejemplo parseo argumentos
 
 import argparse
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import random
@@ -50,7 +52,7 @@ class LayoutGraph:
         self.k2 = self.c2 * np.sqrt(self.size * self.size / len(V))
 
         self._randomize_positions()
-        self._display_step()
+        self._initialize_temperature()
 
         for k in range(self.iters):
             self._log("Inicio iteracion {}".format(k))
@@ -59,7 +61,11 @@ class LayoutGraph:
 
             self._log("Fin iteracion {}".format(k))
             self._log("Posiciones " + str(self.posiciones.tolist()))
-            self._display_step()
+
+            if self.refresh != 0 and k % self.refresh == 0:
+                self._display_step()
+
+        self._display_step()
 
     def _randomize_positions(self):
         V, E = self.grafo
@@ -70,7 +76,6 @@ class LayoutGraph:
         self.posiciones = np.random.default_rng().uniform(np.finfo(float).eps, size, (len(V), 2))
 
     def _step(self):
-        self._initialize_temperature()
         self._initialize_accumulators()
         self._compute_attractions()
         self._compute_repulsions()
@@ -105,8 +110,8 @@ class LayoutGraph:
             distance = np.linalg.norm(vector)
             delta_attraction = self._force_attraction(distance)
             force = delta_attraction * (vector / distance)
-            self.accumulator[i] += force
-            self.accumulator[j] -= force
+            self.accumulator[i] -= force
+            self.accumulator[j] += force
 
             self._log("[A] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
                       .format(a, b, force[0], force[1], np.linalg.norm(force)))
@@ -123,10 +128,10 @@ class LayoutGraph:
 
                 vector = self.posiciones[i] - self.posiciones[j]
                 distance = np.linalg.norm(vector)
-                delta_attraction = self._force_repulsion(distance)
-                force = delta_attraction * (vector / distance)
-                self.accumulator[i] += force
-                self.accumulator[j] -= force
+                delta_repulsion = self._force_repulsion(distance)
+                force = delta_repulsion * (vector / distance)
+                self.accumulator[i] -= force
+                self.accumulator[j] += force
 
                 self._log("[R] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
                           .format(V[i], V[j], force[0], force[1], np.linalg.norm(force)))
@@ -180,6 +185,8 @@ class LayoutGraph:
 
     def _update_temperature(self):
         self.temperature *= self.update_temp
+
+        self._log("Temperatura ahora: {:.2f}".format(self.temperature))
 
     def _log(self, msg: str):
         if self.verbose:
@@ -254,13 +261,13 @@ def main():
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
-        100,
+        1000,
         grafo,
         iters=args.iters,
-        refresh=1,
+        refresh=0,
         c1=5.0,
         c2=0.1,
-        initial_t=1,
+        initial_t=args.temp,
         update_temp=0.95,
         verbose=args.verbose
     )
