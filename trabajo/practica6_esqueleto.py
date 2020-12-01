@@ -27,11 +27,6 @@ class LayoutGraph:
         # Guardo el grafo
         self.grafo = grafo
 
-        # Inicializo estado
-        # Completar
-        self.posiciones = {}
-        self.fuerzas = {}
-
         # Guardo opciones
         self.iters = iters
         self.verbose = verbose
@@ -52,12 +47,16 @@ class LayoutGraph:
 
         self._randomize_positions()
         self._separate_overlapping_vertex()
-        self._display_step()
+        #self._display_step()
 
         for k in range(self.iters):
+            self._log("Inicio iteracion {}".format(k))
+
             self._step()
 
-            self._display_step()
+            self._log("Fin iteracion {}".format(k))
+            self._log("Posiciones " + str(self.posiciones.tolist()))
+            #self._display_step()
 
     def _randomize_positions(self):
         V, E = self.grafo
@@ -74,6 +73,7 @@ class LayoutGraph:
         self._compute_gravity()
         self._separate_overlapping_vertex()
         self._update_positions()
+        self._clamp_in_space() #FIXME remove
 
     def _display_step(self):
         plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1])
@@ -87,14 +87,16 @@ class LayoutGraph:
     def _compute_attractions(self):
         V, E = self.grafo
         for i in range(len(V)):
-            for j in range(len(V)):
-                if i == j:
+            for a, b in E:
+                if V[i] != a and V[i] != b: #FIXME mejorar
                     continue
+
+                j = V.index(b) if V[i] == a else V.index(a)
 
                 vector = self.posiciones[i] - self.posiciones[j]
                 distance = np.linalg.norm(vector)
                 delta_attraction = self._force_attraction(distance)
-                force = delta_attraction * vector / distance
+                force = delta_attraction * (vector / distance)
                 self.accumulator[i] += force
                 self.accumulator[j] -= force
 
@@ -111,9 +113,9 @@ class LayoutGraph:
                 vector = self.posiciones[i] - self.posiciones[j]
                 distance = np.linalg.norm(vector)
                 delta_attraction = self._force_repulsion(distance)
-                force = delta_attraction * vector / distance
-                self.accumulator[i] += force
-                self.accumulator[j] -= force
+                force = delta_attraction * (vector / distance)
+                self.accumulator[i] -= force
+                self.accumulator[j] += force
 
     def _force_repulsion(self, x):
         return self.k2 * self.k2 / x
@@ -127,7 +129,7 @@ class LayoutGraph:
             vector = gravity_origin - self.posiciones[i]
             distance = np.linalg.norm(vector) + eps
             delta_attraction = self._force_gravity(distance)
-            force = delta_attraction * vector / distance
+            force = delta_attraction * (vector / distance)
             self.accumulator[i] += force
 
     def _force_gravity(self, x):
@@ -138,10 +140,18 @@ class LayoutGraph:
         V, E = self.grafo
         self.posiciones += np.random.default_rng().uniform(np.finfo(float).eps, eps, (len(V), 2))#es un asco, correjir
 
+    def _clamp_in_space(self):
+        self.posiciones.clip(np.finfo(float).eps, self.size)
+
     def _update_positions(self):
         V, E = self.grafo
         for i in range(len(V)):
             self.posiciones[i] += self.accumulator[i]
+
+    def _log(self, msg: str):
+        if self.verbose:
+            print(msg)
+
 
 def lee_grafo_archivo(file_path):
     '''
