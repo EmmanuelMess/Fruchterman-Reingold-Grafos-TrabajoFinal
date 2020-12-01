@@ -50,7 +50,6 @@ class LayoutGraph:
         self.k2 = self.c2 * np.sqrt(self.size * self.size / len(V))
 
         self._randomize_positions()
-        self._separate_overlapping_vertex()
         #self._display_step()
 
         for k in range(self.iters):
@@ -149,9 +148,19 @@ class LayoutGraph:
         return 0.1 * self._force_attraction(x)
 
     def _separate_overlapping_vertex(self):
+        if not np.any(np.isnan(self.accumulator)):
+            return
+
+        # Esto solo se ejecuta si alguna division dio nan,
+        # es decir, si la distancia fue 0 en alguna cuenta
         eps = 0.005
-        V, E = self.grafo
-        self.posiciones += np.random.default_rng().uniform(np.finfo(float).eps, eps, (len(V), 2))#es un asco, correjir
+
+        for i in range(self.accumulator.shape[0]):
+            if np.any(np.isnan(self.accumulator[i])):
+                small_force = np.random.normal(0, 1, 2)
+                small_force = np.linalg.norm(small_force)
+                small_force *= eps
+                self.accumulator[i] = small_force
 
     def _update_positions(self):
         V, E = self.grafo
@@ -163,7 +172,8 @@ class LayoutGraph:
                 self.accumulator[i] *= self.temperature
 
             self.posiciones[i] += self.accumulator[i]
-            #TODO clip a bordes
+
+        self.posiciones = np.clip(self.posiciones, 0, self.size)
 
     def _update_temperature(self):
         self.temperature *= self.update_temp
