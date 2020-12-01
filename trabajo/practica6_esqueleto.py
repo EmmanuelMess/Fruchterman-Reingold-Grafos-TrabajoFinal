@@ -6,6 +6,7 @@
 
 import argparse
 import time
+import types
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -58,12 +59,12 @@ class LayoutGraph:
         self._initialize_temperature()
 
         for k in range(self.iters):
-            self._log("Inicio iteracion {}".format(k))
+            self._log(lambda: "Inicio iteracion {}".format(k))
 
             self._step()
 
-            self._log("Fin iteracion {}".format(k))
-            self._log("Posiciones " + str(self.posiciones.tolist()))
+            self._log(lambda: "Fin iteracion {}".format(k))
+            self._log(lambda: "Posiciones " + str(self.posiciones.tolist()))
 
             if self.refresh != 0 and k % self.refresh == 0:
                 self._display_step()
@@ -116,7 +117,7 @@ class LayoutGraph:
             self.accumulator[i] -= force
             self.accumulator[j] += force
 
-            self._log("[A] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
+            self._log(lambda: "[A] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
                       .format(a, b, force[0], force[1], np.linalg.norm(force)))
 
     def _force_attraction(self, x):
@@ -140,7 +141,7 @@ class LayoutGraph:
                 self.accumulator[i] -= force
                 self.accumulator[j] += force
 
-                self._log("[R] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
+                self._log(lambda: "[R] Sobre ({},{}) se aplica |({:.2f},{:.2f})|={:.2f}"
                           .format(V[i], V[j], force[0], force[1], np.linalg.norm(force)))
 
     def _force_repulsion(self, x):
@@ -157,7 +158,7 @@ class LayoutGraph:
             force = delta_attraction * (vector / distance)
             self.accumulator[i] += force
 
-            self._log("[G] Sobre {} se aplica ({:.2f},{:.2f})".format(V[i], force[0], force[1]))
+            self._log(lambda: "[G] Sobre {} se aplica ({:.2f},{:.2f})".format(V[i], force[0], force[1]))
 
     def _force_gravity(self, x):
         return 0.1 * self._force_attraction(x)
@@ -193,11 +194,16 @@ class LayoutGraph:
     def _update_temperature(self):
         self.temperature *= self.update_temp
 
-        self._log("Temperatura ahora: {:.2f}".format(self.temperature))
+        self._log(lambda: "Temperatura ahora: {:.2f}".format(self.temperature))
 
-    def _log(self, msg: str):
+    def _log(self, msg:  type(lambda: str)):
+        """
+        :param msg: un lambda que crea el str a imprimir,
+                    se usa una funcion para evitar computaciones
+                    innecesarias en casos extremos
+        """
         if self.verbose:
-            print(msg)
+            print(msg())
 
 
 def lee_grafo_archivo(file_path):
