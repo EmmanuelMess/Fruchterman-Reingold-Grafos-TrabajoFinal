@@ -288,6 +288,12 @@ def main():
         help='Calcular cuanto toman las funciones con el perfilador de Python',
         default=False
     )
+    parser.add_argument(
+        '-l', '--showonlylast',
+        action='store_true',
+        help='Ver solo la ultima iteracion (no tenido en cuenta si se usa --profile)',
+        default=False
+    )
 
     args = parser.parse_args()
 
@@ -298,7 +304,7 @@ def main():
         1000,
         grafo,
         iters=args.iters,
-        refresh=-1 if args.profile else 0,
+        refresh=-1 if args.profile else (0 if args.showonlylast else 1),
         c1=5.0,
         c2=0.1,
         initial_t=args.temp,

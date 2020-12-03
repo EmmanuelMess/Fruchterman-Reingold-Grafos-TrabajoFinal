@@ -5,8 +5,7 @@ Nicely shows a graph
 [![Chat on Telegram](https://img.shields.io/badge/Chat%20on-Telegram-brightgreen.svg)](https://t.me/EmmanuelsApps)  
 
 ## Screenshots
-<img src="Screenshot_1.png" data-canonical-src="Screenshot_1.png" height="350" /><img src="Screenshot_3.png" data-canonical-src="Screenshot_3.png" height="350" />
- <img src="Screenshot_2.png" data-canonical-src="Screenshot_2.png" height="350" />
+<img src="graph1.png" height="350" /><img src="graph2.png" height="350" /><img src="graph3.png" height="350" />
  
 Thanks:
 * The people at Department of Computer Science of the FCEIA
