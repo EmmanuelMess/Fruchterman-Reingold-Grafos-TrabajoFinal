@@ -8,8 +8,45 @@ import argparse
 import math
 
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
 import numpy as np
 from numpy import random
+
+
+class AnimatedScatter(object):
+    def __init__(self, stream, numpoints=50):
+        self.stream = stream
+
+        self.fig, self.ax = plt.subplots()
+        self.ani = animation.FuncAnimation(self.fig, self.update, interval=5,
+                                          init_func=self.setup_plot, blit=True)
+
+    def setup_plot(self):
+        points, lines = next(self.stream)
+        x, y = points
+
+        self.scat = self.ax.scatter(x, y, color='00')
+        self.plots = []
+
+        for x, y in lines:
+            self.plots.append(self.ax.plot(x, y, color='00')[0])
+
+        self.ax.axis([0, 1000, 0, 1000])#TODO pass size
+        return [self.scat] + self.plots
+
+    def update(self, i):
+        points, lines = next(self.stream)
+        x, y = points
+
+        self.scat.set_offsets(np.c_[np.asarray(x), np.asarray(y)])
+
+        for i in range(len(lines)):
+            x, y = lines[i]
+            self.plots[i].set_data(x, y)
+
+        return [self.scat] + self.plots
+
 
 
 def fast_euclidean_distance(vector):
@@ -73,10 +110,10 @@ class LayoutGraph:
             self._log(lambda: "Posiciones " + str(self.posiciones.tolist()))
 
             if self.refresh > 0 and k % self.refresh == 0:
-                self._display_step()
+                yield self._displayable()
 
         if self.refresh >= 0:
-            self._display_step()
+            yield self._displayable()
 
     def _randomize_positions(self):
         V, E = self.grafo
@@ -95,14 +132,17 @@ class LayoutGraph:
         self._update_positions()
         self._update_temperature()
 
-    def _display_step(self):
+    def _displayable(self):
         V, E = self.grafo
-        plt.scatter(self.posiciones[:, 0], self.posiciones[:, 1], color='00')
+        points = (self.posiciones[:, 0], self.posiciones[:, 1]) #, color='00')
+
+        lines = []
         for a, b in E:
             x = [self.posiciones[V.index(a), 0], self.posiciones[V.index(b), 0]]
             y = [self.posiciones[V.index(a), 1], self.posiciones[V.index(b), 1]]
-            plt.plot(x, y, color='00')
-        plt.show()
+            lines.append((x, y)) #plt.plot(x, y, color='00')
+
+        return points, lines
 
     def _initialize_temperature(self):
         self.temperature = self.initial_t
@@ -319,7 +359,9 @@ def main():
 
         cProfile.runctx('layout_gr.layout()', {'layout_gr': layout_gr}, {})
     else:
-        layout_gr.layout()
+        stream = layout_gr.layout()
+        AnimatedScatter(stream)
+        plt.show()
 
 
 if __name__ == '__main__':
