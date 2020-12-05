@@ -373,7 +373,7 @@ def main():
     if args.profile:
         import cProfile
 
-        cProfile.runctx('layout_gr.layout()', {'layout_gr': layout_gr}, {}) #FIXME
+        cProfile.runctx('next(layout_gr.layout())', {'layout_gr': layout_gr}, {})
     elif args.showonlylast:
         points, lines = next(layout_gr.layout())
         x, y = points
