@@ -114,7 +114,7 @@ class LayoutGraph:
             self._log(lambda: "Fin iteracion {}".format(k))
             self._log(lambda: "Posiciones " + str(self.posiciones.tolist()))
 
-            if self.refresh > 0 and k % self.refresh == 0:
+            if self.refresh > 0 and (k % self.refresh == 0 or k == 0):
                 yield self._displayable()
 
         if self.refresh >= 0:
@@ -309,6 +309,13 @@ def main():
         help='Cantidad de iteraciones a efectuar',
         default=50
     )
+    # Cantidad de iteraciones, opcional, 50 por defecto
+    parser.add_argument(
+        '-r', '--refresh',
+        type=int,
+        help='Cada cuanto mostrar una iteracion',
+        default=1
+    )
     # Temperatura inicial
     parser.add_argument(
         '--temp',
@@ -351,7 +358,7 @@ def main():
         1000,
         grafo,
         iters=args.iters,
-        refresh=-1 if args.profile else (0 if args.showonlylast else 1),
+        refresh=-1 if args.profile else (0 if args.showonlylast else args.refresh),
         c1=5.0,
         c2=0.1,
         initial_t=args.temp,
