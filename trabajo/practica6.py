@@ -127,9 +127,7 @@ class LayoutGraph:
         V, E = self.grafo
         size = self.size #float tamaño del espacio
 
-        # "np.finfo(float).eps" para que no genere vertices sobre el borde,
-        # porque el final del rango es abierto pero el inicio es cerrado
-        self.posiciones = np.random.default_rng().uniform(np.finfo(float).eps, size, (len(V), 2))
+        self.posiciones = np.random.default_rng().uniform(0, size, (len(V), 2))
 
     def _step(self):
         self._initialize_accumulators()
@@ -157,7 +155,7 @@ class LayoutGraph:
 
     def _initialize_accumulators(self):
         V, E = self.grafo
-        self.accumulator = np.zeros((len(V), 2))
+        self.accumulator = np.zeros((len(V), 2), dtype=float)
 
     def _compute_attractions(self):
         V, E = self.grafo
@@ -203,7 +201,7 @@ class LayoutGraph:
         return -self.k2 * self.k2 / x
 
     def _compute_gravity(self):
-        gravity_origin = np.ones(2) * self.size / 2
+        gravity_origin = np.ones(2, dtype=float) * self.size / 2
 
         V, E = self.grafo
         for i in range(len(V)):
@@ -228,6 +226,8 @@ class LayoutGraph:
 
         for i in range(self.accumulator.shape[0]):
             if np.isnan(self.accumulator[i]).any():
+                #Genera un vector normal en una direccion al azar,
+                # pero todas las direcciones tienen la misma probabilidad
                 small_force = np.random.normal(0, 1, 2)
                 small_force = fast_euclidean_distance(small_force)
                 small_force *= eps
