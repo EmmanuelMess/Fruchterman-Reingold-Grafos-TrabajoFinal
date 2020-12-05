@@ -365,6 +365,14 @@ def main():
         import cProfile
 
         cProfile.runctx('layout_gr.layout()', {'layout_gr': layout_gr}, {}) #FIXME
+    elif args.showonlylast:
+        points, lines = next(layout_gr.layout())
+        x, y = points
+        plt.scatter(x, y, color='00')
+        for line in lines:
+            x, y = line
+            plt.plot(x, y, color='00')
+        plt.show()
     else:
         stream = layout_gr.layout()
         AnimatedScatter(stream)
