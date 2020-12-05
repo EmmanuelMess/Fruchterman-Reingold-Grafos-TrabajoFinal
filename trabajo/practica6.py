@@ -15,8 +15,9 @@ from numpy import random
 
 
 class AnimatedScatter(object):
-    def __init__(self, stream, numpoints=50):
+    def __init__(self, stream, size):
         self.stream = stream
+        self.size = size
 
         self.fig, self.ax = plt.subplots()
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=5,
@@ -32,7 +33,7 @@ class AnimatedScatter(object):
         for x, y in lines:
             self.plots.append(self.ax.plot(x, y, color='00')[0])
 
-        self.ax.axis([0, 1000, 0, 1000])#TODO pass size
+        self.ax.axis([0, self.size, 0, self.size])#TODO pass size
         return [self.scat] + self.plots
 
     def update(self, i):
@@ -352,10 +353,11 @@ def main():
     args = parser.parse_args()
 
     grafo = lee_grafo_archivo(args.file_name)
+    size = 1000
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
-        1000,
+        size,
         grafo,
         iters=args.iters,
         refresh=-1 if args.profile else (0 if args.showonlylast else args.refresh),
@@ -382,7 +384,7 @@ def main():
         plt.show()
     else:
         stream = layout_gr.layout()
-        AnimatedScatter(stream)
+        AnimatedScatter(stream, size)
         plt.show()
 
 
