@@ -36,7 +36,12 @@ class AnimatedScatter(object):
         return [self.scat] + self.plots
 
     def update(self, i):
-        points, lines = next(self.stream)
+        plottableOrNone = next(self.stream)
+        if plottableOrNone is None:
+            self.ani.event_source.stop()
+            return [self.scat] + self.plots
+
+        points, lines = plottableOrNone
         x, y = points
 
         self.scat.set_offsets(np.c_[np.asarray(x), np.asarray(y)])
@@ -115,6 +120,8 @@ class LayoutGraph:
         if self.refresh >= 0:
             yield self._displayable()
 
+        yield None
+
     def _randomize_positions(self):
         V, E = self.grafo
         size = self.size #float tamaño del espacio
@@ -140,7 +147,7 @@ class LayoutGraph:
         for a, b in E:
             x = [self.posiciones[V.index(a), 0], self.posiciones[V.index(b), 0]]
             y = [self.posiciones[V.index(a), 1], self.posiciones[V.index(b), 1]]
-            lines.append((x, y)) #plt.plot(x, y, color='00')
+            lines.append((x, y))
 
         return points, lines
 
@@ -357,7 +364,7 @@ def main():
     if args.profile:
         import cProfile
 
-        cProfile.runctx('layout_gr.layout()', {'layout_gr': layout_gr}, {})
+        cProfile.runctx('layout_gr.layout()', {'layout_gr': layout_gr}, {}) #FIXME
     else:
         stream = layout_gr.layout()
         AnimatedScatter(stream)
