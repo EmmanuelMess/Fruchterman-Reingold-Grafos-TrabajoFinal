@@ -295,7 +295,9 @@ def lee_grafo_archivo(file_path):
 
 def main():
     # Definimos los argumentos de linea de comando que aceptamos
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Muestra un grafo lindamente usando el metodo propuesto por Fruchterman y Reingold"
+    )
 
     # Verbosidad, opcional, False por defecto
     parser.add_argument(
@@ -368,6 +370,9 @@ def main():
         verbose=args.verbose,
         limit_repulsion=args.limitrepulsion
     )
+
+    print("Creado en 2020 por Facundo Emmanuel Messulam y Franco Ignacio Vallejos Vigier")
+    print("Para la parte practica de la materia de Complementos de Matematica I, carrera LCC, FCEIA, UNR, Argentina")
 
     # Ejecutamos el layout
     if args.profile:
